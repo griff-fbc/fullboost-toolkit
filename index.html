@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Boost E/E Toolkit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    color-scheme: dark;
+    --copper: #1559d6;
+    --copper-bright: #3d82f5;
+    --ink: #ffffff;
+    --ink-soft: #d6dce6;
+    --paper: #0e131b;
+    --paper-2: #2b323d;
+    --line: #3d4654;
+    --good: #3ecf6a;
+    --warn: #c9a227;
+    --hot: #ff4d4d;
+    --shadow: rgba(0, 0, 0, 0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Archivo', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 9px 12px 20px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 560px; margin: 0 auto; }
+  .masthead { margin-bottom: 8px; }
+
+  /* tabs */
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+    background: var(--paper-2);
+    padding: 3px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+  }
+  .tab {
+    font-family: 'Archivo', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 6px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    line-height: 1.15;
+  }
+  .tab small {
+    display: block;
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-top: 2px;
+    letter-spacing: 0.02em;
+  }
+  .tab.active {
+    background: var(--copper);
+    color: #ffffff;
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+  .tab.active small { color: rgba(255,255,255,0.8); opacity: 1; }
+  .tabpanel { display: none; }
+  .tabpanel.active { display: block; animation: fade 0.2s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* inline capacity warning */
+  .cap-warn {
+    display: none;
+    font-size: 12px; line-height: 1.35; font-weight: 600;
+    color: var(--hot);
+    margin-top: 6px;
+    padding: 0 8px;
+  }
+  .cap-warn.show { display: block; }
+
+  /* amps colour states */
+  .amps.amps-warn { color: var(--warn) !important; }
+  .amps.amps-over { color: var(--hot) !important; }
+
+  .bundle-auto {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 9px; font-weight: 600;
+    color: var(--copper-bright); text-transform: none; letter-spacing: 0;
+    background: rgba(61,130,245,0.2); padding: 2px 6px; border-radius: 5px;
+    margin-left: 4px;
+  }
+  .bundle-auto:empty { display: none; }
+
+  /* parallel stepper */
+  .stepper {
+    display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  }
+  .step-btn {
+    width: 34px; height: 34px; flex-shrink: 0;
+    border: 1px solid var(--line); border-radius: 9px;
+    background: var(--paper); color: var(--ink);
+    font-family: 'Spline Sans Mono', monospace; font-size: 20px; font-weight: 600;
+    cursor: pointer; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s ease;
+  }
+  .step-btn:hover { background: var(--copper); color: #fff; border-color: var(--copper); }
+  .step-btn:active { transform: scale(0.94); }
+  .stepper input {
+    flex: 1; min-width: 0;
+    font-family: 'Spline Sans Mono', monospace; font-size: 16px; font-weight: 600;
+    text-align: center;
+    padding: 7px 6px; border: 1px solid var(--line); border-radius: 9px;
+    background: var(--paper); color: var(--ink);
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper input:focus { outline: 2px solid var(--copper); border-color: var(--copper); }
+
+  /* highlighted info icon when paralleling */
+  .tip.tip-alert .tip-icon {
+    background: var(--hot); border-color: var(--hot); color: #fff;
+    font-weight: 800;
+    animation: tipPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes tipPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(181,59,43,0.45); }
+    50% { box-shadow: 0 0 0 4px rgba(181,59,43,0); }
+  }
+
+
+  h1 {
+    font-size: clamp(22px, 6vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+  }
+  h1 .accent { color: var(--copper-bright); }
+  .masthead-top { display: flex; align-items: center; gap: 12px; }
+  .fb-logo { height: 38px; width: auto; flex-shrink: 0; }
+
+  .card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 9px 12px;
+    box-shadow: 0 1px 0 var(--shadow);
+    margin-bottom: 7px;
+  }
+
+  .field-label {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  input[type="range"] {
+    width: 100%; display: block; margin: 2px 0 0;
+    -webkit-appearance: none; appearance: none;
+    height: 6px; border-radius: 4px;
+    background: linear-gradient(90deg, var(--copper) 0%, var(--copper-bright) 100%);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: #ffffff; border: 3px solid var(--copper); cursor: pointer;
+    box-shadow: 0 1px 4px var(--shadow);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #ffffff; border: 3px solid var(--copper); cursor: pointer;
+  }
+  .gauge-ends {
+    display: flex; justify-content: space-between;
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 10px; color: var(--ink-soft);
+    margin-top: 12px; padding: 0 2px;
+  }
+
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .seg.four { grid-template-columns: repeat(4, 1fr); }
+  .seg.four button { padding: 5px 4px; }
+  .seg button {
+    font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 600;
+    padding: 6px 8px; border: 1px solid var(--line); border-radius: 9px;
+    background: var(--paper); color: var(--ink-soft); cursor: pointer;
+    transition: all 0.15s ease; text-align: center; line-height: 1.2;
+  }
+  .seg button small {
+    display: block; font-family: 'Spline Sans Mono', monospace;
+    font-size: 10px; font-weight: 400; opacity: 0.7; margin-top: 2px;
+  }
+  .seg button.active { background: var(--copper); color: #ffffff; border-color: var(--copper); }
+  .seg button.active small { opacity: 1; color: rgba(255,255,255,0.75); }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 7px; }
+  .toggle-text { font-size: 13px; font-weight: 600; }
+  .toggle-text small {
+    display: block; font-weight: 400; color: var(--ink-soft);
+    font-family: 'Spline Sans Mono', monospace; font-size: 10.5px; margin-top: 2px;
+  }
+  .switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider-sw {
+    position: absolute; cursor: pointer; inset: 0;
+    background: var(--paper-2); border: 1px solid var(--line);
+    border-radius: 28px; transition: 0.18s;
+  }
+  .slider-sw:before {
+    content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px;
+    background: #fafafa; border-radius: 50%; transition: 0.18s; box-shadow: 0 1px 3px var(--shadow);
+  }
+  .switch input:checked + .slider-sw { background: var(--copper); border-color: var(--copper); }
+  .switch input:checked + .slider-sw:before { transform: translateX(22px); }
+
+  .breakdown {
+    margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 9px;
+    display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center;
+  }
+  .bd-usable {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--copper); border-radius: 9px; padding: 10px 16px; flex-shrink: 0;
+  }
+  .bd-usable-k {
+    font-family: 'Spline Sans Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.8); margin-bottom: 2px;
+    text-align: center; line-height: 1.2;
+  }
+  .bd-usable-v {
+    font-family: 'Spline Sans Mono', monospace; font-weight: 600; font-size: 26px;
+    color: #ffffff; line-height: 1;
+  }
+  .bd-usable-v small { font-size: 0.4em; margin-left: 3px; color: rgba(255,255,255,0.8); font-weight: 500; }
+  .bd-factors { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .brow { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+  .brow .lbl { color: var(--ink-soft); }
+  .brow .lbl small { font-family: 'Spline Sans Mono', monospace; font-size: 10px; opacity: 0.8; }
+  .brow .val { font-family: 'Spline Sans Mono', monospace; font-weight: 600; font-size: 12.5px; }
+  .brow.dim { display: none; }
+
+  /* wireBlock: slider (wide) + specs (narrow) top row */
+  .wb-top { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: stretch; }
+  .wb-gauge { min-width: 0; display: flex; flex-direction: column; }
+  .wb-gauge .field-label { margin-bottom: 0; }
+  .wb-gauge .field-label b { color: var(--ink); font-weight: 700; }
+  .wb-gauge input[type="range"] { margin: auto 0; }
+  .wb-gauge .gauge-ends { margin-top: 0; }
+
+  /* capacity figure (wide) + load current (narrow) bottom row */
+  .wireblock-result {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px;
+    text-align: left; padding: 8px 2px 2px; margin-top: 8px;
+    border-top: 1px dashed var(--line);
+  }
+  .wb-cap { text-align: center; min-width: 0; }
+  .wb-current { flex-shrink: 0; }
+  .wb-current .field-label { margin-bottom: 6px; text-align: center; }
+  .wb-current .vd-inputwrap input { padding: 15px 30px 15px 12px; width: 138px; font-size: 16px; }
+  .wb-current .vd-unit { right: 12px; }
+
+  .wb-cap .cap-label {
+    font-family: 'Spline Sans Mono', monospace; font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0;
+  }
+  .amps {
+    font-family: 'Spline Sans Mono', monospace; font-weight: 600;
+    font-size: clamp(34px, 9vw, 46px); line-height: 0.95;
+    letter-spacing: -0.03em; transition: color 0.2s ease;
+  }
+  .amps .unit { font-size: 0.32em; font-weight: 500; color: var(--ink-soft); letter-spacing: 0; margin-left: 6px; }
+  .result-note { margin-top: 3px; font-size: 11px; line-height: 1.4; color: var(--ink-soft); }
+
+  /* specs stacked vertically on the right of the slider */
+  .specs-stack {
+    display: flex; flex-direction: column; gap: 3px;
+    font-family: 'Spline Sans Mono', monospace; font-size: 11px; color: var(--ink-soft);
+    text-align: right; flex-shrink: 0;
+    border-left: 1px solid var(--line); padding-left: 14px;
+  }
+  .specs-stack b { color: var(--ink); font-weight: 600; font-size: 12.5px; }
+
+  /* cable run + path toggle side by side */
+  .vd-runrow { display: grid; grid-template-columns: 55fr 45fr; gap: 10px; align-items: stretch; margin-bottom: 12px; }
+  .vd-runrow .vd-field:not(.vd-pathfield) { display: flex; flex-direction: column; }
+  .vd-runrow .vd-field:not(.vd-pathfield) .vd-inputwrap { margin-top: auto; margin-bottom: auto; }
+  .vd-pathseg { grid-template-columns: 1fr; gap: 5px; }
+  .vd-pathseg button { padding: 6px 8px; display: flex; flex-direction: row; gap: 6px; align-items: baseline; justify-content: center; font-size: 12px; }
+  .vd-pathseg button small { display: inline; margin-top: 0; font-size: 9px; }
+
+  /* supply -> load flow */
+  .vd-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 8px;
+    margin-bottom: 9px;
+  }
+  .vd-side { display: flex; flex-direction: column; }
+  .vd-side-head {
+    font-family: 'Spline Sans Mono', monospace; font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+    text-align: center; padding: 8px 0 6px; margin-bottom: 0;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    white-space: nowrap; color: var(--ink-soft);
+  }
+  .load-opt {
+    font-weight: 400; font-size: 8px; letter-spacing: 0.02em;
+    color: var(--ink-soft); opacity: 0.75;
+    text-transform: lowercase;
+  }
+  .vd-arrow {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 18px; color: var(--copper); font-weight: 600;
+    padding-bottom: 8px; text-align: center;
+  }
+  .vd-rangepair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .vd-rangepair .vd-inputwrap input { padding-right: 24px; }
+  .vd-rangepair .vd-unit { right: 8px; }
+
+  /* working line above result tiles */
+  .vd-working {
+    margin-bottom: 12px; padding-bottom: 11px;
+    border-bottom: 1px dashed var(--line);
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 11.5px; line-height: 1.6; color: var(--ink-soft);
+  }
+  .vd-working b { color: var(--copper); font-weight: 600; }
+  .vd-working .vw-sub { display: block; margin-top: 4px; font-size: 10.5px; opacity: 0.85; }
+  .vd-result.empty .vd-working { display: none; }
+  .vd-field label {
+    font-family: 'Spline Sans Mono', monospace; font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft);
+    font-weight: 600; display: block; margin-bottom: 6px;
+  }
+  .vd-inputwrap { position: relative; }
+  .vd-inputwrap input {
+    width: 100%; font-family: 'Spline Sans Mono', monospace; font-size: 16px;
+    padding: 9px 60px 9px 13px; border: 1px solid var(--line); border-radius: 9px;
+    background: var(--paper); color: var(--ink); -moz-appearance: textfield;
+  }
+  .vd-inputwrap input::-webkit-outer-spin-button, .vd-inputwrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .vd-inputwrap input:focus { outline: 2px solid var(--copper); border-color: var(--copper); }
+  .vd-inputwrap input::placeholder, .current-input::placeholder { font-size: 12px; color: #8b94a4; opacity: 1; }
+  .vd-rangepair .vd-inputwrap input::placeholder { font-size: 11px; }
+  .vd-unit {
+    position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+    font-family: 'Spline Sans Mono', monospace; font-size: 13px; color: var(--ink-soft); pointer-events: none;
+  }
+  .unit-toggle {
+    display: inline-flex; gap: 0; margin-left: 8px; vertical-align: middle;
+    border: 1px solid var(--line); border-radius: 7px; overflow: hidden;
+  }
+  .unit-toggle button {
+    font-family: 'Spline Sans Mono', monospace; font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border: none; background: var(--paper); color: var(--ink-soft); cursor: pointer;
+  }
+  .unit-toggle button.active { background: var(--copper); color: #fff; }
+
+  /* wire spec toggle (Generic / 55A / 55M) */
+  .spec-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 11px; padding-bottom: 11px; border-bottom: 1px dashed var(--line);
+  }
+  .spec-toggle {
+    display: inline-flex; gap: 0;
+    border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  }
+  .spec-toggle button {
+    font-family: 'Spline Sans Mono', monospace; font-size: 11.5px; font-weight: 600;
+    padding: 6px 14px; border: none; border-left: 1px solid var(--line);
+    background: var(--paper); color: var(--ink-soft); cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .spec-toggle button:first-child { border-left: none; }
+  .spec-toggle button:hover { color: var(--ink); }
+  .spec-toggle button.active { background: var(--copper); color: #fff; }
+  .vd-result { margin-top: 11px; }
+  .vd-result.empty .vd-verdict { display: none; }
+  .vd-main {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  }
+  .vd-block { background: var(--paper-2); padding: 10px 8px; text-align: center; }
+  .vd-num { font-family: 'Spline Sans Mono', monospace; font-weight: 600; font-size: 22px; letter-spacing: -0.01em; }
+  .vd-block .vd-k { font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
+  .vd-verdict { display: none; }
+  .vd-verdict.ok, .vd-verdict.tight, .vd-verdict.over {
+    margin-top: 12px; border-radius: 10px; padding: 11px 15px;
+    font-size: 13.5px; font-weight: 600; border: 1px solid; display: flex; align-items: center; gap: 9px;
+  }
+  .vd-verdict.ok:before, .vd-verdict.tight:before, .vd-verdict.over:before { content: ""; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .vd-verdict.ok { background: rgba(62,207,106,0.13); border-color: rgba(62,207,106,0.42); color: var(--good); }
+  .vd-verdict.ok:before { background: var(--good); }
+  .vd-verdict.tight { background: rgba(201,162,39,0.12); border-color: rgba(201,162,39,0.4); color: var(--warn); }
+  .vd-verdict.tight:before { background: var(--warn); }
+  .vd-verdict.over { background: rgba(255,77,77,0.13); border-color: rgba(255,77,77,0.45); color: var(--hot); }
+  .vd-verdict.over:before { background: var(--hot); }
+
+  .mt-result {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  }
+  .mt-block { background: var(--paper-2); padding: 11px 12px; text-align: center; }
+  .mt-block.feature { background: var(--copper); }
+  .mt-num { font-family: 'Spline Sans Mono', monospace; font-weight: 600; font-size: 24px; letter-spacing: -0.01em; }
+  .mt-block.feature .mt-num { color: #ffffff; }
+  .mt-num .small-awg { font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+  .mt-block.feature .mt-num .small-awg { color: rgba(255,255,255,0.8); }
+  .mt-num .equiv-csa { display: block; font-size: 11px; color: var(--ink-soft); font-weight: 500; letter-spacing: 0; margin-top: 2px; }
+  .mt-block.feature .mt-num .equiv-csa { color: rgba(255,255,255,0.75); }
+  /* compact sizing when three boxes are shown */
+  .mt-result.three .mt-num { font-size: 19px; }
+  .mt-result.three .mt-num .small-awg { font-size: 11px; }
+  .mt-result.three .mt-num .equiv-csa { font-size: 10px; }
+  .mt-result.three .mt-block { padding: 11px 6px; }
+  .mt-result.three .mt-k { font-size: 8.5px; }
+  .mt-k { font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
+  .mt-block.feature .mt-k { color: rgba(255,255,255,0.8); }
+  .mt-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; line-height: 1.5; }
+
+  /* splice grid */
+  .sp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .sp-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sp-col .sp-head {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    text-align: center;
+  }
+  /* per-column spec mini-toggle (55M / 55A / Gen) */
+  .sp-spectoggle {
+    display: flex; width: 100%;
+    border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  }
+  .sp-spectoggle button {
+    flex: 1; min-width: 0;
+    font-family: 'Spline Sans Mono', monospace; font-size: 9px; font-weight: 600;
+    padding: 4px 2px; border: none; border-left: 1px solid var(--line);
+    background: var(--paper); color: var(--ink-soft); cursor: pointer;
+    transition: all 0.1s ease;
+  }
+  .sp-spectoggle button:first-child { border-left: none; }
+  .sp-spectoggle button.active { background: var(--copper); color: #fff; }
+  .sp-col input {
+    width: 100%;
+    font-family: 'Spline Sans Mono', monospace;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 9px 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    text-align: center;
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* custom dropdown */
+  .dd { position: relative; width: 100%; }
+  .dd-toggle {
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: 'Spline Sans Mono', monospace; font-weight: 600; font-size: 14px;
+    padding: 9px 6px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: var(--paper); color: var(--ink);
+    cursor: pointer; transition: border-color 0.12s ease;
+  }
+  .dd-toggle:hover { border-color: var(--copper); }
+  .dd.open .dd-toggle { border-color: var(--copper); }
+  .dd-chev { font-size: 9px; color: var(--ink-soft); transition: transform 0.18s ease; }
+  .dd.open .dd-chev { transform: rotate(180deg); }
+  .dd-menu {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+    background: #1c2330; border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+    max-height: 220px; overflow-y: auto;
+    padding: 4px; display: none;
+  }
+  .dd.open .dd-menu { display: block; }
+  .dd-opt {
+    font-family: 'Spline Sans Mono', monospace; font-weight: 600; font-size: 13px;
+    text-align: center; color: var(--ink); padding: 8px 6px; border-radius: 6px;
+    cursor: pointer; transition: background 0.1s ease;
+  }
+  .dd-opt:hover { background: rgba(61,130,245,0.18); }
+  .dd-opt.sel { background: var(--copper); color: #fff; }
+  .sp-col input::-webkit-outer-spin-button, .sp-col input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .sp-col input:focus { outline: 2px solid var(--copper); border-color: var(--copper); }
+  .sp-col.off .dd-toggle { color: var(--ink-soft); opacity: 0.7; }
+  .sp-col.off input { opacity: 0.4; }
+  .sp-mult-label {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: center;
+    opacity: 0.7;
+    margin-top: -2px;
+  }
+  .sp-csa {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: -3px 0;
+  }
+  .sp-csa[data-empty="1"] { opacity: 0.4; }
+  .sp-col.off .sp-csa { opacity: 0.4; }
+  .sp-col .sp-remove {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 7px;
+    opacity: 1;
+    font-family: 'Spline Sans Mono', monospace;
+    transition: all 0.12s ease;
+  }
+  .sp-col .sp-remove:hover { background: rgba(255,77,77,0.14); border-color: var(--hot); color: var(--hot); }
+  .sp-addbtn {
+    width: 100%;
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px;
+    border: 1px dashed var(--copper-bright);
+    border-radius: 9px;
+    background: rgba(61,130,245,0.08);
+    color: var(--copper-bright);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 16px;
+  }
+  .sp-addbtn:hover { background: rgba(61,130,245,0.16); border-style: solid; }
+  .sp-addbtn:disabled { opacity: 0.4; cursor: default; border-color: var(--line); color: var(--ink-soft); }
+  .sp-addbtn:disabled:hover { background: transparent; color: var(--ink-soft); }
+
+  .disclaimer {
+    font-size: 11px; line-height: 1.45; color: var(--ink-soft);
+    margin-top: 30px; padding: 11px 14px; border-left: 2px solid var(--copper);
+    background: var(--paper-2); border-radius: 0 8px 8px 0;
+  }
+  .disclaimer strong { color: var(--ink); }
+  .ref-details { margin: 0; }
+  .ref-summary {
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--ink-soft);
+    cursor: pointer; list-style: none; user-select: none;
+    display: flex; align-items: center; gap: 7px;
+    padding: 1px 0;
+  }
+  .ref-summary::-webkit-details-marker { display: none; }
+  .ref-summary:hover { color: var(--ink); }
+  .ref-chev { font-size: 10px; transition: transform 0.18s ease; display: inline-block; }
+  .ref-details[open] .ref-chev { transform: rotate(90deg); }
+  .ref-body { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--line); }
+  .ref-body p { font-size: 11px; line-height: 1.45; }
+  .liability-foot {
+    font-size: 10px; line-height: 1.5; color: var(--ink-soft);
+    margin-top: 16px; padding: 0 2px; opacity: 0.85;
+  }
+  .liability-foot strong { color: var(--ink-soft); }
+
+  .credit {
+    margin-top: 18px; padding: 16px 14px 4px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+  .credit-built {
+    font-family: 'Archivo', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    margin: 0 0 10px;
+  }
+  .credit-built a { color: var(--copper-bright); text-decoration: none; border-bottom: 1px solid transparent; }
+  .credit-built a:hover { border-bottom-color: var(--copper-bright); }
+  .credit-line {
+    font-size: 11.5px; line-height: 1.5; color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+  .credit-line:last-child { margin-bottom: 0; }
+  .credit-line a { color: var(--copper-bright); text-decoration: none; border-bottom: 1px solid rgba(61,130,245,0.4); }
+  .credit-line a:hover { border-bottom-color: var(--copper-bright); }
+  .credit-brew { color: var(--copper-bright); font-weight: 600; text-decoration: none; border-bottom: 1px solid rgba(61,130,245,0.4); }
+  .credit-brew:hover { border-bottom-color: var(--copper-bright); }
+
+  /* disclaimer gate */
+  .gate {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 22px; z-index: 100;
+  }
+  .gate.hidden { display: none; }
+  .gate-card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    max-width: 440px; width: 100%;
+    padding: 28px 26px 24px;
+    box-shadow: 0 18px 50px rgba(20,14,8,0.4);
+    animation: gateIn 0.25s ease;
+  }
+  @keyframes gateIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .gate-eyebrow {
+    font-family: 'Spline Sans Mono', monospace; font-size: 15px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--hot);
+    font-weight: 700; margin-bottom: 10px;
+  }
+  .gate-card h2 {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.01em;
+    line-height: 1.1; margin-bottom: 14px;
+  }
+  .gate-card p { font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 12px; }
+  .gate-card p .co { color: var(--ink); font-weight: 600; }
+  .gate-btn {
+    width: 100%; font-family: 'Archivo', sans-serif; font-size: 15px; font-weight: 700;
+    padding: 14px; border: none; border-radius: 10px;
+    background: var(--copper); color: #fff; cursor: pointer;
+    margin-top: 8px; transition: background 0.15s ease;
+  }
+  .gate-btn:hover { background: var(--copper-bright); }
+
+  .disclaimer a, .disc-sources a {
+    color: var(--copper-bright); text-decoration: none; border-bottom: 1px solid rgba(61,130,245,0.45);
+  }
+  .disclaimer a:hover, .disc-sources a:hover { border-bottom-color: var(--copper); }
+  .disc-sources {
+    margin: 9px 0 0; padding-top: 9px;
+    border-top: 1px solid var(--line);
+    font-size: 10.5px; line-height: 1.5;
+  }
+  .disc-sources a { font-weight: 600; }
+
+  /* tooltip */
+  .tip { position: relative; display: inline-flex; outline: none; }
+  .tip-icon {
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    border: 1px solid var(--ink-soft);
+    color: var(--ink-soft);
+    font-family: 'Spline Sans Mono', monospace;
+    font-size: 11px; font-weight: 600; font-style: italic;
+    display: flex; align-items: center; justify-content: center;
+    cursor: help; line-height: 1; user-select: none;
+    transition: all 0.15s ease;
+  }
+  .tip:hover .tip-icon, .tip:focus .tip-icon, .tip.open .tip-icon { background: var(--copper); border-color: var(--copper); color: #fff; }
+  .tip-csa { display: inline-flex; vertical-align: middle; margin-left: 4px; }
+  .tip-csa .tip-icon { width: 13px; height: 13px; font-size: 9px; }
+  .tip-bubble {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: -8px;
+    width: 270px;
+    background: #20283a;
+    color: #f0f0f0;
+    padding: 13px 15px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.5);
+    font-size: 12px;
+    line-height: 1.5;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    z-index: 30;
+  }
+  .tip:hover .tip-bubble, .tip:focus .tip-bubble, .tip.open .tip-bubble { opacity: 1; visibility: visible; transform: none; }
+  .tip-bubble:after {
+    content: "";
+    position: absolute;
+    top: 100%; right: 12px;
+    border: 7px solid transparent;
+    border-top-color: #20283a;
+  }
+  .tip-bubble strong { display: block; color: #fff; font-size: 12.5px; margin-bottom: 7px; letter-spacing: 0.01em; }
+  .tip-bubble .tip-line { display: block; margin-bottom: 7px; color: #d0d0d0; }
+  .tip-bubble .tip-line b { color: var(--copper-bright); font-weight: 600; }
+  .tip-bubble .tip-foot { margin-bottom: 0; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.14); color: #aaaaaa; }
+  .tip-bubble .tip-foot.tip-warn { color: #ff7a7a; }
+
+  /* below variant - multi-wire heading tip. The bubble is anchored to the card (not the
+     inline icon, whose position shifts with text wrap) so it always stays on-screen. */
+  .csa-card { position: relative; }
+  .tip-belowleft { position: static; }
+  .tip-belowleft .tip-bubble {
+    position: absolute;
+    bottom: auto; top: 38px;
+    right: auto; left: 12px;
+    transform: translateY(-4px);
+  }
+  .tip-belowleft.tip:hover .tip-bubble, .tip-belowleft.tip:focus .tip-bubble, .tip-belowleft.tip.open .tip-bubble { transform: none; }
+  .tip-belowleft .tip-bubble:after { display: none; }
+
+  @media (max-width: 420px) {
+    .tip-bubble { width: 230px; right: -6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-eyebrow">Before you start</div>
+    <h2>DISCLAIMER - DON'T BE A WOUNDER</h2>
+    <p>This tool is provided for <span class="co">guidance only</span>. You are ultimately responsible for verifying every result and ensuring your design is safe, correct, and compliant with the applicable standards and regulations for your application.</p>
+    <p><span class="co">Full Boost Consulting Ltd</span> accept no liability for any loss, damage, injury, or cost arising from the use of this tool or reliance on its outputs.</p>
+    <button class="gate-btn" id="gateBtn">I understand</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead-top">
+      <img class="fb-logo" src="data:image/png;base64,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" alt="Full Boost Consulting FB logo">
+      <h1>FULL BOOST <span class="accent">E/E Toolkit</span></h1>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="cap">Wire<small>bundling</small></button>
+    <button class="tab" data-tab="vd">Volt drop<small>vs distance</small></button>
+    <button class="tab" data-tab="csa">CSA<small>multi wire</small></button>
+  </nav>
+
+  <section class="card" id="wireBlock">
+    <div class="spec-row">
+      <span class="field-label" style="margin-bottom:0;">Wire spec</span>
+      <div class="spec-toggle" id="specToggle">
+        <button data-spec="55m">55M</button>
+        <button data-spec="55a" class="active">55A</button>
+        <button data-spec="generic">Generic</button>
+      </div>
+    </div>
+    <div class="wb-top">
+      <div class="wb-gauge">
+        <span class="field-label">Wire gauge <b id="gaugeVal">24</b> AWG</span>
+        <input type="range" id="gaugeSlider" min="0" max="0" value="0" step="1">
+        <div class="gauge-ends"><span id="thickEnd">heavy</span><span id="thinEnd">light</span></div>
+      </div>
+      <div class="specs-stack">
+        <span><b id="specDia">0.51</b> Ø mm</span>
+        <span><b id="specArea">0.205</b> mm²<span class="tip tip-csa" tabindex="0"><span class="tip-icon">i</span><span class="tip-bubble">
+          <strong>Copper cross-section</strong>
+          <span class="tip-line">55A/55M CSA here is copper only - from the strand build (n × strand area), excluding air gaps. Generic is straight from PowerStream.</span>
+        </span></span></span>
+        <span><b id="specRes">84.2</b> mΩ/m</span>
+      </div>
+    </div>
+
+    <div class="wireblock-result">
+      <div class="wb-cap">
+        <div class="cap-label">Current capacity</div>
+        <div class="amps" id="ampsOut">3.5<span class="unit">A</span></div>
+        <div class="result-note" id="resultNote">24 AWG · free air</div>
+      </div>
+      <div class="wb-current">
+        <span class="field-label">Load current</span>
+        <div class="vd-inputwrap"><input type="number" id="currentInput" class="current-input" inputmode="decimal" min="0" step="0.1" placeholder="amps"><span class="vd-unit">A</span></div>
+      </div>
+    </div>
+    <div class="cap-warn" id="warnText"></div>
+  </section>
+
+  <div class="tabpanel active" id="panel-cap">
+
+  <section class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <span class="field-label" style="margin-bottom:0;">Parallel conductors</span>
+      <span class="tip" id="parallelTip" tabindex="0">
+        <span class="tip-icon">i</span>
+        <span class="tip-bubble">
+          <strong>Running wires in parallel</strong>
+          <span class="tip-line">Splitting the load across several identical conductors multiplies the current capacity. Capacity is the single-wire rating × the number of conductors.</span>
+          <span class="tip-line">Bundling auto-sets to twice the parallel count, assuming each power run has a matching ground return in the same bundle. Override below if your layout differs.</span>
+          <span class="tip-line tip-foot tip-warn">Assumes equal current sharing - parallel conductors must be the same gauge, length and termination.</span>
+        </span>
+      </span>
+    </div>
+
+    <div class="stepper" id="parallelStepper">
+      <button class="step-btn" id="parMinus" aria-label="decrease">−</button>
+      <input type="number" id="parInput" inputmode="numeric" min="1" max="20" step="1" value="1">
+      <button class="step-btn" id="parPlus" aria-label="increase">+</button>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:9px;">
+      <span class="field-label" style="margin-bottom:0;">Bundling <span id="bundleAuto" class="bundle-auto"></span></span>
+      <span style="display:inline-flex; align-items:center; gap:8px;">
+        <span class="tip" tabindex="0">
+          <span class="tip-icon">i</span>
+          <span class="tip-bubble">
+            <strong>Bundling &amp; standards</strong>
+            <span class="tip-line">Count only adjacent current-carrying power conductors. Low-current signal and data wires don't contribute meaningful heat and are excluded.</span>
+            <span class="tip-line"><b>BS 7671</b> - the UK wiring regs. Stricter here: it cuts capacity more for the same bundle, so it's the more conservative (safer) choice.</span>
+            <span class="tip-line"><b>NEC</b> - the US code. More generous derating, so it allows a bit more current for the same number of bundled wires.</span>
+            <span class="tip-line tip-foot">Same wire, same bundle - BS 7671 gives the lower, safer number. Pick the standard your project follows.</span>
+          </span>
+        </span>
+        <span class="unit-toggle" id="stdToggle">
+          <button data-std="bs" class="active">BS 7671</button><button data-std="nec">NEC</button>
+        </span>
+      </span>
+    </div>
+    <div class="seg four" id="bundleSeg" style="margin-top:8px;">
+      <button data-n="1" class="active">1-3<small id="bf0">×1.00</small></button>
+      <button data-n="4">4-6<small id="bf1">×0.65</small></button>
+      <button data-n="7">7-9<small id="bf2">×0.54</small></button>
+      <button data-n="10">10+<small id="bf3">×0.48</small></button>
+    </div>
+
+    <span class="field-label" style="margin-top:8px;">Ambient temperature</span>
+    <div class="seg four" id="ambientSeg">
+      <button data-factor="1"    class="active">≤30°C<small>×1.00</small></button>
+      <button data-factor="0.82">31-40°<small>×0.82</small></button>
+      <button data-factor="0.71">41-45°<small>×0.71</small></button>
+      <button data-factor="0.58">45-50°<small>×0.58</small></button>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-text">Continuous load<small>3 hrs or more - derates capacity ÷1.25</small></div>
+      <label class="switch"><input type="checkbox" id="contToggle"><span class="slider-sw"></span></label>
+    </div>
+
+    <div class="breakdown" id="breakdown">
+      <div class="bd-usable">
+        <span class="bd-usable-k">Usable capacity</span>
+        <span class="bd-usable-v" id="bUsable">3.5<small>A</small></span>
+      </div>
+      <div class="bd-factors">
+        <div class="brow"><span class="lbl">Base - free air</span><span class="val" id="bBase">3.5 A</span></div>
+        <div class="brow dim" id="rowParallel"><span class="lbl">Parallel <small id="parCtx">×2</small></span><span class="val" id="bParallel">-</span></div>
+        <div class="brow dim" id="rowBundle"><span class="lbl">Bundling <small id="bunCtx">×0.65</small></span><span class="val" id="bBundle">-</span></div>
+        <div class="brow dim" id="rowAmbient"><span class="lbl">Ambient <small id="ambCtx">×0.82</small></span><span class="val" id="bAmbient">-</span></div>
+        <div class="brow dim" id="rowCont"><span class="lbl">Continuous <small>÷1.25</small></span><span class="val" id="bCont">-</span></div>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /panel-cap -->
+
+  <div class="tabpanel" id="panel-vd">
+
+  <section class="card">
+    <span class="field-label">Voltage drop over distance</span>
+
+    <div class="vd-runrow">
+      <div class="vd-field">
+        <label>Cable run
+          <span class="unit-toggle" id="lenUnitToggle">
+            <button data-u="m" class="active">m</button><button data-u="ft">ft</button>
+          </span>
+        </label>
+        <div class="vd-inputwrap"><input type="number" id="vdLength" inputmode="decimal" min="0" step="0.1" placeholder="length"><span class="vd-unit" id="lenUnitLabel">m</span></div>
+      </div>
+      <div class="vd-field vd-pathfield">
+        <label aria-hidden="true">&nbsp;</label>
+        <div class="seg vd-pathseg" id="pathSeg">
+          <button data-path="round" class="active">Round trip<small>out + return</small></button>
+          <button data-path="one">One-way<small>single length</small></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vd-flow">
+      <div class="vd-side">
+        <div class="vd-side-head supply">Supply voltage</div>
+        <div class="vd-inputwrap"><input type="number" id="vdVolts" inputmode="decimal" min="0" step="1" placeholder="e.g. 12"><span class="vd-unit">V</span></div>
+      </div>
+
+      <div class="vd-arrow">→</div>
+
+      <div class="vd-side">
+        <div class="vd-side-head load">Load range <span class="load-opt">optional</span></div>
+        <div class="vd-rangepair">
+          <div class="vd-inputwrap"><input type="number" id="vdLoadMin" inputmode="decimal" min="0" step="0.1" placeholder="min"><span class="vd-unit">V</span></div>
+          <div class="vd-inputwrap"><input type="number" id="vdLoadMax" inputmode="decimal" min="0" step="0.1" placeholder="max"><span class="vd-unit">V</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vd-result empty" id="vdResult">
+      <div class="vd-working" id="vdWorking"></div>
+      <div class="vd-main">
+        <div class="vd-block"><div class="vd-num" id="vdDrop">-</div><div class="vd-k">volts dropped</div></div>
+        <div class="vd-block"><div class="vd-num" id="vdPct">-</div><div class="vd-k">% of supply</div></div>
+        <div class="vd-block"><div class="vd-num" id="vdEnd">-</div><div class="vd-k">volts at load</div></div>
+      </div>
+      <div class="vd-verdict" id="vdVerdict"></div>
+    </div>
+  </section>
+
+  </div><!-- /panel-vd -->
+
+  <div class="tabpanel" id="panel-csa">
+
+  <section class="card csa-card">
+    <span class="field-label">Splice / CSA - combine wire specs to size a splice or multi-term<span class="tip tip-csa tip-belowleft" tabindex="0"><span class="tip-icon">i</span><span class="tip-bubble">
+      <strong>Bundle cross-section</strong>
+      <span class="tip-line">CSA here uses total bundle diameter (with air gaps) for splice and terminal fit.</span>
+    </span></span></span>
+    <div class="sp-grid" id="spGrid">
+      <!-- columns injected by JS -->
+    </div>
+    <button class="sp-addbtn" id="spAdd">+ Add wire spec</button>
+    <div class="mt-result three" id="mtResult">
+      <div class="mt-block"><div class="mt-num" id="mtCSA">-</div><div class="mt-k">total CSA mm²</div></div>
+      <div class="mt-block feature" id="mtNearBlock"><div class="mt-num" id="mtEquiv">-</div><div class="mt-k">nearest AWG</div></div>
+      <div class="mt-block" id="mtRoundBlock"><div class="mt-num" id="mtRound">-</div><div class="mt-k">rounded up</div></div>
+    </div>
+    <p class="mt-note" id="mtNote">Pick a gauge and quantity in each spec. The total is the combined copper area; the equivalent size is the smallest single AWG conductor a splice or contact must accommodate.</p>
+  </section>
+
+  </div><!-- /panel-csa -->
+
+  <div class="disclaimer">
+    <details class="ref-details">
+      <summary class="ref-summary"><span class="ref-chev">▸</span> Reference &amp; method notes</summary>
+      <div class="ref-body">
+        <p style="margin:0;"><strong>Reference only.</strong> Base current capacities are PowerStream's <strong>chassis wiring</strong> figures (single copper wire in free air) from the <em>Handbook of Electronic Tables and Formulas</em>. Bundling applies staged grouping factors - <a href="https://electrical.theiet.org/bs-7671-18th-edition-wiring-regulations/" target="_blank" rel="noopener">BS 7671</a> Table 4C1 (bunched &amp; enclosed) or <a href="https://www.nfpa.org/product/nfpa-70-national-electrical-code-nec/p0070code" target="_blank" rel="noopener">NEC</a> 310.15(C)(1) - on top, then ambient and continuous factors stack after that. Counts are current-carrying conductors. These are rules of thumb: motorsport looms run short and hot, and spec wire (e.g. thin-wall ETFE) is often rated well above plain copper-in-PVC, so treat the bundled figure as a conservative floor. Voltage drop uses DC resistance of solid copper. Confirm against the applicable standard and the wire manufacturer's data.</p>
+        <p style="margin:8px 0 0;"><strong>Wire spec.</strong> Selecting <strong>55A</strong> (TE 55A0111 / M22759/32, tin-coated copper, ETFE, 150°C) or <strong>55M</strong> (TE 55M0414, silver-plated alloy, ETFE, 200°C) swaps the resistance and outer diameter to TE Connectivity's published drawing values, which feed the volt-drop and diameter figures. TE does not publish current ratings for these wires, so <strong>current capacities are always calculated from PowerStream data</strong> regardless of the selected spec. 55A covers 8-30 AWG; 55M covers 24-30 AWG. Two cross-sectional areas are used, each for the right job: the <strong>wire spec card</strong> shows <strong>conducting copper CSA</strong> (summed from the strand build for 55A/55M, nominal AWG for Generic) - the metal that carries current and sets resistance; the <strong>multi-wire tab</strong> uses <strong>physical bundle CSA</strong> (π(Ø/2)² from each wire's conductor diameter, PowerStream's method) - the whole stranded size that fills a splice or multi-term.</p>
+      </div>
+    </details>
+    <p class="disc-sources"><strong>Sources:</strong> wire data from <a href="https://www.powerstream.com/Wire_Size.htm" target="_blank" rel="noopener">PowerStream</a>; spec wire dimensions and resistance from <a href="https://www.te.com" target="_blank" rel="noopener">TE Connectivity</a> control drawings (55A0111, 55M0414); bundling factors from <a href="https://electrical.theiet.org/bs-7671-18th-edition-wiring-regulations/" target="_blank" rel="noopener">BS 7671 (IET Wiring Regulations)</a> and <a href="https://www.nfpa.org/product/nfpa-70-national-electrical-code-nec/p0070code" target="_blank" rel="noopener">NEC / NFPA 70</a>.</p>
+  </div>
+
+  <p class="liability-foot">
+    <strong>Disclaimer - don't be a wounder.</strong> This tool is provided for guidance only. You are ultimately responsible for verifying every result and ensuring your design is safe, correct, and compliant with the applicable standards and regulations for your application. Full Boost Consulting Ltd accept no liability for any loss, damage, injury, or cost arising from the use of this tool or reliance on its outputs.
+  </p>
+
+  <div class="credit">
+    <p class="credit-built">Built by <a href="https://fullboostconsulting.com/" target="_blank" rel="noopener">Full Boost Consulting Ltd</a></p>
+    <p class="credit-line">Like the tool? Spotted an issue? Want one built for you, or your team? <a href="https://fullboostconsulting.com/contact" target="_blank" rel="noopener">Get in touch</a> - we'd love to hear from you.</p>
+    <p class="credit-line">And if it saved you some time, <a href="https://ko-fi.com/fullboostconsulting" target="_blank" rel="noopener" class="credit-brew">buy us a brew</a> ☕</p>
+  </div>
+
+</div>
+
+<script>
+  // PowerStream data. res = ohms per 1000 ft. chassis & trans = amps. dia mm, area mm2, breakStr lbs (null where not listed).
+  const DATA = [
+    { awg:"4/0", dia:11.684, area:107,   res:0.049, chassis:380, trans:302, brk:6120 },
+    { awg:"3/0", dia:10.404, area:84.9,  res:0.0618,chassis:328, trans:239, brk:4860 },
+    { awg:"2/0", dia:9.266,  area:67.4,  res:0.0779,chassis:283, trans:190, brk:3860 },
+    { awg:"0",   dia:8.252,  area:53.5,  res:0.0983,chassis:245, trans:150, brk:3060 },
+    { awg:"1",   dia:7.348,  area:42.4,  res:0.1239,chassis:211, trans:119, brk:2430 },
+    { awg:"2",   dia:6.543,  area:33.6,  res:0.1563,chassis:181, trans:94,  brk:1930 },
+    { awg:"3",   dia:5.827,  area:26.7,  res:0.197, chassis:158, trans:75,  brk:1530 },
+    { awg:"4",   dia:5.189,  area:21.1,  res:0.2485,chassis:135, trans:60,  brk:1210 },
+    { awg:"5",   dia:4.620,  area:16.8,  res:0.3133,chassis:118, trans:47,  brk:960 },
+    { awg:"6",   dia:4.115,  area:13.3,  res:0.3951,chassis:101, trans:37,  brk:760 },
+    { awg:"7",   dia:3.665,  area:10.6,  res:0.4982,chassis:89,  trans:30,  brk:605 },
+    { awg:"8",   dia:3.264,  area:8.37,  res:0.6282,chassis:73,  trans:24,  brk:480 },
+    { awg:"9",   dia:2.906,  area:6.63,  res:0.7921,chassis:64,  trans:19,  brk:380 },
+    { awg:"10",  dia:2.588,  area:5.26,  res:0.9989,chassis:55,  trans:15,  brk:314 },
+    { awg:"11",  dia:2.304,  area:4.17,  res:1.26,  chassis:47,  trans:12,  brk:249 },
+    { awg:"12",  dia:2.052,  area:3.31,  res:1.588, chassis:41,  trans:9.3, brk:197 },
+    { awg:"13",  dia:1.829,  area:2.63,  res:2.003, chassis:35,  trans:7.4, brk:150 },
+    { awg:"14",  dia:1.628,  area:2.08,  res:2.525, chassis:32,  trans:5.9, brk:119 },
+    { awg:"15",  dia:1.450,  area:1.65,  res:3.184, chassis:28,  trans:4.7, brk:94 },
+    { awg:"16",  dia:1.290,  area:1.31,  res:4.016, chassis:22,  trans:3.7, brk:75 },
+    { awg:"17",  dia:1.151,  area:1.04,  res:5.064, chassis:19,  trans:2.9, brk:59 },
+    { awg:"18",  dia:1.024,  area:0.823, res:6.385, chassis:16,  trans:2.3, brk:47 },
+    { awg:"19",  dia:0.912,  area:0.653, res:8.051, chassis:14,  trans:1.8, brk:37 },
+    { awg:"20",  dia:0.813,  area:0.519, res:10.15, chassis:11,  trans:1.5, brk:29 },
+    { awg:"21",  dia:0.724,  area:0.412, res:12.8,  chassis:9,   trans:1.2, brk:23 },
+    { awg:"22",  dia:0.645,  area:0.327, res:16.14, chassis:7,   trans:0.92,brk:18 },
+    { awg:"23",  dia:0.574,  area:0.259, res:20.36, chassis:4.7, trans:0.729,brk:14.5 },
+    { awg:"24",  dia:0.511,  area:0.205, res:25.67, chassis:3.5, trans:0.577,brk:11.5 },
+    { awg:"25",  dia:0.455,  area:0.162, res:32.37, chassis:2.7, trans:0.457,brk:9 },
+    { awg:"26",  dia:0.404,  area:0.128, res:40.81, chassis:2.2, trans:0.361,brk:7.2 },
+    { awg:"27",  dia:0.361,  area:0.102, res:51.47, chassis:1.7, trans:0.288,brk:5.5 },
+    { awg:"28",  dia:0.320,  area:0.080, res:64.9,  chassis:1.4, trans:0.226,brk:4.5 },
+    { awg:"29",  dia:0.287,  area:0.0647,res:81.83, chassis:1.2, trans:0.182,brk:3.6 },
+    { awg:"30",  dia:0.254,  area:0.0507,res:103.2, chassis:0.86,trans:0.142,brk:2.75 },
+    { awg:"31",  dia:0.226,  area:0.0401,res:130.1, chassis:0.7, trans:0.113,brk:2.25 },
+    { awg:"32",  dia:0.203,  area:0.0324,res:164.1, chassis:0.53,trans:0.091,brk:1.8 },
+    { awg:"33",  dia:0.180,  area:0.0255,res:206.9, chassis:0.43,trans:0.072,brk:1.3 },
+    { awg:"34",  dia:0.160,  area:0.0201,res:260.9, chassis:0.33,trans:0.056,brk:1.1 },
+    { awg:"35",  dia:0.142,  area:0.0159,res:329,   chassis:0.27,trans:0.044,brk:0.92 },
+    { awg:"36",  dia:0.127,  area:0.0127,res:414.8, chassis:0.21,trans:0.035,brk:0.72 },
+    { awg:"37",  dia:0.114,  area:0.0103,res:523.1, chassis:0.17,trans:0.0289,brk:0.57 },
+    { awg:"38",  dia:0.102,  area:0.00811,res:659.6,chassis:0.13,trans:0.0228,brk:0.45 },
+    { awg:"39",  dia:0.089,  area:0.00621,res:831.8,chassis:0.11,trans:0.0175,brk:0.36 },
+    { awg:"40",  dia:0.079,  area:0.00487,res:1049, chassis:0.09,trans:0.0137,brk:0.29 }
+  ];
+
+  const BASIS_LABELS = { chassis: "chassis wiring", trans: "power transmission" };
+
+  // TE Connectivity wire spec overrides. Each entry: resistance (mΩ/m) and finished-wire OD (mm).
+  // Source: TE Specification Control Drawings. TE does not publish current ratings, so
+  // capacity stays on PowerStream data regardless of the selected spec.
+  // 55A = 55A0111 / M22759/32 (tin-coated copper, ETFE, 150°C, 600V), AWG 8-30.
+  // 55M = 55M0414 (silver-plated high-strength alloy, ETFE, 200°C, 450V), AWG 24-30.
+  const TE_SPECS = {
+    "55a": {
+      label: "55A", part: "55A0111 / M22759/32",
+      range: ["8","10","12","14","16","18","20","22","24","26","28","30"],
+      data: {
+        "8":  { mRm:2.30,   od:4.78 },
+        "10": { mRm:4.13,   od:3.25 },
+        "12": { mRm:6.63,   od:2.62 },
+        "14": { mRm:10.04,  od:2.16 },
+        "16": { mRm:15.78,  od:1.73 },
+        "18": { mRm:20.44,  od:1.52 },
+        "20": { mRm:32.41,  od:1.27 },
+        "22": { mRm:53.15,  od:1.09 },
+        "24": { mRm:85.96,  od:0.94 },
+        "26": { mRm:135.50, od:0.81 },
+        "28": { mRm:225.07, od:0.69 },
+        "30": { mRm:355.64, od:0.61 }
+      }
+    },
+    "55m": {
+      label: "55M", part: "55M0414",
+      range: ["24","26","28","30"],
+      data: {
+        "24": { mRm:91.10,  od:0.81 },
+        "26": { mRm:144.00, od:0.69 },
+        "28": { mRm:239.00, od:0.58 },
+        "30": { mRm:377.00, od:0.51 }
+      }
+    }
+  };
+  const GENERIC_RANGE = ["4","6","8","10","12","14","16","18","20","22","24","26","28","30","32"];
+
+  // Two different cross-sectional areas per spec, used for two different physical questions:
+  //
+  // 1) BUNDLE CSA (physical fit) - used on the multi-wire/splice tab. This is the whole
+  //    stranded conductor's outer-circle area, π(d/2)² from each sheet's published conductor
+  //    diameter, matching PowerStream's own method (their listed CSA = π(d/2)² exactly).
+  //    It's what physically fills a splice barrel or multi-term, including inter-strand gaps.
+  const SPEC55A_BUNDLE_CSA = {
+    "8": 13.8788, "10": 6.0755, "12": 3.7913, "14": 2.2746,
+    "16": 1.4503, "18": 1.1433, "20": 0.7317, "22": 0.4560,
+    "24": 0.2919, "26": 0.1829, "28": 0.1140, "30": 0.0730
+  };
+  const SPEC55M_BUNDLE_CSA = {
+    "24": 0.2781, "26": 0.1735, "28": 0.1075, "30": 0.0683
+  };
+  //
+  // 2) COPPER CSA (conducting metal) - used on the wire spec card (Wire + Volt-drop tabs).
+  //    This is the actual copper, summed from the strand build: n × π(strand Ø /2)².
+  //    It's what carries current, so it's the right figure beside resistance and capacity.
+  //    55A0111 strands are n×AWG (strand Ø from the AWG formula); 55M0414 strands are
+  //    n/metric-mm (strand Ø taken straight off the sheet, so these are exact).
+  const SPEC55A_COPPER_CSA = {
+    "8": 8.5408, "10": 4.7640, "12": 2.9961, "14": 1.9401,
+    "16": 1.2201, "18": 0.9676, "20": 0.6085, "22": 0.3827,
+    "24": 0.2407, "26": 0.1514, "28": 0.0887, "30": 0.0558
+  };
+  const SPEC55M_COPPER_CSA = {
+    "24": 0.2149, "26": 0.1492, "28": 0.0792, "30": 0.0550
+  };
+
+  let wireSpec = "55a"; // 'generic' | '55a' | '55m'
+
+  // Bundling grouping factors. Index maps to the 4 bands: [1-3, 4-6, 7-9, 10+]
+  // BS 7671 (bunched & enclosed, Table 4C1, representative mid-band values)
+  // NEC 310.15(C)(1) adjustment factors (counts current-carrying conductors)
+  const BUNDLE = {
+    bs:  { factors: [1.00, 0.65, 0.54, 0.48], labels: ["1-3","4-6","7-9","10+"] },
+    nec: { factors: [1.00, 0.80, 0.70, 0.50], labels: ["1-3","4-6","7-9","10+"] }
+  };
+
+  let standard = "bs";
+  let bundleIdx = 0;      // 0 = 1-3 conductors (no derate)
+  let ambientFactor = 1;
+  let continuous = false;
+  let parallelCount = 1;  // number of parallel current-carrying conductors
+
+  const FT_PER_M = 3.280839895;
+
+  const slider = document.getElementById('gaugeSlider');
+
+  // active gauge list depends on the selected spec; rebuilt by applyWireSpec()
+  function rangeForSpec(){
+    return wireSpec === "generic" ? GENERIC_RANGE : TE_SPECS[wireSpec].range;
+  }
+  let GAUGES = DATA.filter(d => rangeForSpec().includes(d.awg));
+
+  function buildSlider(keepAwg){
+    GAUGES = DATA.filter(d => rangeForSpec().includes(d.awg));
+    slider.max = GAUGES.length - 1;
+    // snap to the same gauge if still valid, else nearest available by index proximity
+    let idx = GAUGES.findIndex(d => d.awg === keepAwg);
+    if(idx < 0){
+      // keepAwg out of this spec's range - snap to nearest by numeric AWG
+      const target = parseInt(keepAwg,10);
+      let best=0, bestDiff=Infinity;
+      GAUGES.forEach((d,i)=>{
+        const diff=Math.abs(parseInt(d.awg,10)-target);
+        if(diff<bestDiff){ bestDiff=diff; best=i; }
+      });
+      idx = best;
+    }
+    slider.value = idx;
+    document.getElementById('thickEnd').textContent = GAUGES[0].awg + " AWG";
+    document.getElementById('thinEnd').textContent = GAUGES[GAUGES.length - 1].awg + " AWG";
+  }
+
+  // initial build (default 24 AWG)
+  buildSlider("24");
+
+  const $ = id => document.getElementById(id);
+  const gaugeVal=$('gaugeVal'), ampsOut=$('ampsOut'), resultNote=$('resultNote');
+  const specDia=$('specDia'), specArea=$('specArea'), specRes=$('specRes');
+  const currentInput=$('currentInput'), warnText=$('warnText');
+  const bBase=$('bBase'), rowParallel=$('rowParallel'), parCtx=$('parCtx'), bParallel=$('bParallel');
+  const rowBundle=$('rowBundle'), bunCtx=$('bunCtx'), bBundle=$('bBundle');
+  const rowAmbient=$('rowAmbient'), ambCtx=$('ambCtx'), bAmbient=$('bAmbient'), bUsable=$('bUsable'), rowCont=$('rowCont'), bCont=$('bCont');
+
+
+  function fmt(n){
+    if(n>=100) return Math.round(n).toString();
+    if(n>=10) return (Math.round(n*10)/10).toString();
+    if(n>=1) return (Math.round(n*100)/100).toString();
+    return (Math.round(n*1000)/1000).toString();
+  }
+
+  // ohms per metre (PowerStream), derived from ohms/1000ft
+  function ohmPerM(d){ return d.res / 1000 / 0.3048; }
+
+  // active resistance in mΩ/m - TE spec value when a spec is selected, else PowerStream
+  function activeMrm(d){
+    if(wireSpec !== "generic"){
+      const te = TE_SPECS[wireSpec].data[d.awg];
+      if(te) return te.mRm;
+    }
+    return ohmPerM(d) * 1000;
+  }
+  // active outer diameter in mm - TE finished-wire OD when a spec is selected, else PowerStream conductor Ø
+  function activeOd(d){
+    if(wireSpec !== "generic"){
+      const te = TE_SPECS[wireSpec].data[d.awg];
+      if(te) return te.od;
+    }
+    return d.dia;
+  }
+  // active copper CSA in mm² for the spec card (conducting metal, from strand build) -
+  // TE copper area when a spec is selected, else PowerStream's listed area
+  function activeCopperCsa(d){
+    if(wireSpec==="55a" && SPEC55A_COPPER_CSA[d.awg]!=null) return SPEC55A_COPPER_CSA[d.awg];
+    if(wireSpec==="55m" && SPEC55M_COPPER_CSA[d.awg]!=null) return SPEC55M_COPPER_CSA[d.awg];
+    return d.area;
+  }
+
+  function bundleFactor(){ return BUNDLE[standard].factors[bundleIdx]; }
+
+  // capacity = single-wire rating × parallel × bundling × ambient, ÷1.25 if continuous
+  function usableCapacity(d){
+    const c = d.chassis * parallelCount * bundleFactor() * ambientFactor;
+    return continuous ? c/1.25 : c;
+  }
+
+  // map a conductor count to the bundling band index
+  function bandForCount(n){
+    if(n<=3) return 0;
+    if(n<=6) return 1;
+    if(n<=9) return 2;
+    return 3;
+  }
+
+  // update the small ×factor labels on the bundling buttons when standard changes
+  function refreshBundleLabels(){
+    const f = BUNDLE[standard].factors;
+    $('bf0').textContent = "×"+f[0].toFixed(2);
+    $('bf1').textContent = "×"+f[1].toFixed(2);
+    $('bf2').textContent = "×"+f[2].toFixed(2);
+    $('bf3').textContent = "×"+f[3].toFixed(2);
+  }
+
+  function render(){
+    const d = GAUGES[+slider.value];
+    gaugeVal.textContent = d.awg;
+    specDia.textContent = fmt(activeOd(d));
+    specArea.textContent = fmt(activeCopperCsa(d));
+    specRes.textContent = fmt(activeMrm(d));
+
+    const base = d.chassis;
+    const bf = bundleFactor();
+    const afterParallel = base * parallelCount;
+    const afterBundle = afterParallel * bf;
+    const afterAmbient = afterBundle * ambientFactor;
+    const usable = usableCapacity(d);
+
+    ampsOut.innerHTML = fmt(usable) + '<span class="unit">A</span>';
+    ampsOut.style.color = "";
+    const bands = BUNDLE[standard].labels[bundleIdx];
+    const parNote = parallelCount>1 ? ` · ${parallelCount} × parallel` : "";
+    const line1 = d.awg + " AWG" + parNote;
+    const grpNote = bundleIdx===0 ? "free air" : `${bands} bundled · ${standard.toUpperCase()}`;
+    const ambNote = ambientFactor===1 ? "" : " · ambient ×"+ambientFactor;
+    const contNote = continuous ? " · continuous" : "";
+    const line2 = grpNote + ambNote + contNote;
+    resultNote.innerHTML = line1 + "<br>" + line2;
+
+    bBase.textContent = fmt(base) + " A";
+
+    if(parallelCount===1){ rowParallel.classList.add('dim'); }
+    else {
+      rowParallel.classList.remove('dim');
+      parCtx.textContent = "×"+parallelCount;
+      bParallel.textContent = "+"+fmt(afterParallel-base)+" A";
+    }
+
+    if(bundleIdx===0){ rowBundle.classList.add('dim'); }
+    else {
+      rowBundle.classList.remove('dim');
+      bunCtx.textContent = "×"+bf.toFixed(2);
+      bBundle.textContent = "−"+fmt(afterParallel-afterBundle)+" A";
+    }
+
+    if(ambientFactor===1){ rowAmbient.classList.add('dim'); }
+    else { rowAmbient.classList.remove('dim'); ambCtx.textContent="×"+ambientFactor; bAmbient.textContent="−"+fmt(afterBundle-afterAmbient)+" A"; }
+
+    if(continuous){ rowCont.classList.remove('dim'); bCont.textContent="−"+fmt(afterAmbient-usable)+" A"; }
+    else { rowCont.classList.add('dim'); }
+
+    bUsable.innerHTML = fmt(usable) + "<small>A</small>";
+
+    evaluateLoad();
+  }
+
+  function evaluateLoad(){
+    const d = GAUGES[+slider.value];
+    const usable = usableCapacity(d);
+    const raw = currentInput.value.trim();
+    const warn = $('warnText');
+    // reset
+    ampsOut.classList.remove('amps-warn','amps-over');
+    warn.classList.remove('show');
+
+    if(raw===""){ return; }
+    const load = parseFloat(raw);
+    if(isNaN(load)||load<0){ return; }
+
+    // usable already includes the continuous derate, so compare the raw load directly
+    const ratio = load/usable;
+
+    if(ratio>1.0){
+      // exceeds capacity - red number + warning
+      ampsOut.classList.add('amps-over');
+      warn.classList.add('show');
+      warn.textContent = `${fmt(load)} A exceeds the capacity of ${d.awg} AWG. Increase gauge or reconsider bundling.`;
+    } else if(ratio>=0.8){
+      // within 20% of max - orange number, no text
+      ampsOut.classList.add('amps-warn');
+    }
+    // else: comfortably within capacity, default colour
+  }
+
+  // ---- gauge + current drive both tabs (single shared block) ----
+  slider.addEventListener('input', ()=>{ render(); calcVoltDrop(); });
+  currentInput.addEventListener('input', ()=>{ evaluateLoad(); calcVoltDrop(); });
+
+  // helper: visually activate a bundling band by index
+  function setBundleBand(idx){
+    bundleIdx = idx;
+    document.querySelectorAll('#bundleSeg button').forEach((x,i)=>x.classList.toggle('active', i===idx));
+  }
+
+  // parallel conductors stepper: auto-set bundling to 2× the parallel count (power + matching grounds)
+  const parInput=$('parInput');
+  function applyParallel(n){
+    parallelCount = Math.max(1, Math.min(20, n||1));
+    parInput.value = parallelCount;
+    if(parallelCount>1){
+      const conductors = parallelCount * 2; // power runs + matching ground returns
+      setBundleBand(bandForCount(conductors));
+      $('bundleAuto').textContent = `auto: ${conductors} conductors`;
+      $('parallelTip').classList.add('tip-alert');
+    } else {
+      setBundleBand(0);
+      $('bundleAuto').textContent = "";
+      $('parallelTip').classList.remove('tip-alert');
+    }
+    render();
+    calcVoltDrop();
+  }
+  $('parMinus').addEventListener('click', ()=>applyParallel(parallelCount-1));
+  $('parPlus').addEventListener('click', ()=>applyParallel(parallelCount+1));
+  parInput.addEventListener('input', ()=>{
+    const v = parseInt(parInput.value,10);
+    if(!isNaN(v)) applyParallel(v);
+  });
+  parInput.addEventListener('blur', ()=>{ if(parInput.value==="" || parseInt(parInput.value,10)<1) applyParallel(1); });
+
+  document.querySelectorAll('#bundleSeg button').forEach((b,i)=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#bundleSeg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); bundleIdx=i;
+    // manual override clears the auto badge
+    $('bundleAuto').textContent = parallelCount>1 ? "manual" : "";
+    render();
+  }));
+  document.querySelectorAll('#stdToggle button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#stdToggle button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); standard=b.dataset.std; refreshBundleLabels(); render();
+  }));
+  document.querySelectorAll('#specToggle button').forEach(b=>b.addEventListener('click',()=>{
+    const currentAwg = GAUGES[+slider.value].awg; // remember gauge to snap to
+    document.querySelectorAll('#specToggle button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    wireSpec = b.dataset.spec;
+    buildSlider(currentAwg);   // rebuild range, snap to nearest valid gauge
+    render();
+    calcVoltDrop();
+  }));
+  document.querySelectorAll('#ambientSeg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#ambientSeg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); ambientFactor=parseFloat(b.dataset.factor); render();
+  }));
+  $('contToggle').addEventListener('change',e=>{ continuous=e.target.checked; render(); });
+
+  // ---- voltage drop ----
+  let vdPath="round", lenUnit="m";
+  const vdLength=$('vdLength'), vdVolts=$('vdVolts');
+  const vdLoadMin=$('vdLoadMin'), vdLoadMax=$('vdLoadMax'), vdWorking=$('vdWorking');
+  const vdResult=$('vdResult'), vdDrop=$('vdDrop'), vdPct=$('vdPct'), vdEnd=$('vdEnd'), vdVerdict=$('vdVerdict');
+
+  let loadMaxEdited = false; // tracks if user has manually set the max
+
+  function calcVoltDrop(){
+    const d = GAUGES[+slider.value];
+    const I = parseFloat(currentInput.value);
+    const L = parseFloat(vdLength.value);
+    const V = parseFloat(vdVolts.value);
+
+    const mRm = activeMrm(d);           // milliohms per metre, single conductor (spec-aware)
+    const Rm = mRm / 1000;              // ohms per metre, single conductor
+    const RmEff = Rm / parallelCount;   // parallel conductors share current: R/N
+    const mRmEff = mRm / parallelCount; // effective milliohms per metre
+
+    // default the load max to the supply voltage, until the user edits it themselves
+    if(!loadMaxEdited && !isNaN(V) && V>0){ vdLoadMax.placeholder = V.toString(); }
+    else if(!loadMaxEdited){ vdLoadMax.placeholder = "max"; }
+
+    if(isNaN(I)||isNaN(L)||I<=0||L<=0){
+      vdResult.classList.add('empty');
+      vdDrop.textContent="-"; vdPct.textContent="-"; vdEnd.textContent="-";
+      vdWorking.innerHTML="";
+      return;
+    }
+
+    const lenM = lenUnit==="ft" ? L/FT_PER_M : L;
+    const conductorLen = vdPath==="round" ? 2*lenM : lenM;
+    const drop = I * RmEff * conductorLen;
+
+    vdResult.classList.remove('empty');
+    vdDrop.textContent = drop.toFixed(drop<1?2:1)+" V";
+
+    // working line: V = I × R × L using milliohms/m (effective, after parallel)
+    const pathNote = vdPath==="round" ? `2 × ${fmtNum(lenM)} m` : `${fmtNum(lenM)} m`;
+    const par = parallelCount>1;
+    const resShown = par ? `${mRmEff.toFixed(2)} mΩ/m` : `${mRm.toFixed(2)} mΩ/m`;
+    const resParts = [`${d.awg} AWG = ${mRm.toFixed(2)} mΩ/m`];
+    if(par) resParts.push(`÷ ${parallelCount} parallel = ${mRmEff.toFixed(2)} mΩ/m`);
+    const lenParts = [];
+    if(lenUnit==="ft") lenParts.push(`${fmtNum(L)} ft = ${fmtNum(lenM)} m`);
+    if(vdPath==="round") lenParts.push("doubled length for round trip");
+    vdWorking.innerHTML =
+      `<b>${fmtNum(I)} A</b> × <b>${resShown}</b> × <b>${pathNote}</b> = <b>${drop.toFixed(drop<1?3:2)} V</b>`+
+      `<span class="vw-sub">${resParts.join(" · ")}</span>`+
+      (lenParts.length ? `<span class="vw-sub">${lenParts.join(" · ")}</span>` : "");
+
+    if(!isNaN(V)&&V>0){
+      const pct=(drop/V)*100;
+      const vLoad = V-drop;
+      vdPct.textContent=pct.toFixed(1)+"%";
+      vdEnd.textContent=vLoad.toFixed(drop<1?2:1)+" V";
+
+      const minRaw = vdLoadMin.value.trim();
+      const loadMin = minRaw==="" ? NaN : parseFloat(minRaw);
+
+      // only show a verdict when a minimum is provided
+      if(!isNaN(loadMin)){
+        if(vLoad < loadMin){
+          vdVerdict.className="vd-verdict over";
+          vdVerdict.innerHTML=`Load sees ${vLoad.toFixed(2)} V - below the ${fmtNum(loadMin)} V minimum. Use a heavier gauge or reduce length.`;
+        } else {
+          vdVerdict.className="vd-verdict ok";
+          vdVerdict.innerHTML=`Load sees ${vLoad.toFixed(2)} V - above the ${fmtNum(loadMin)} V minimum.`;
+        }
+      } else {
+        vdVerdict.className="vd-verdict"; vdVerdict.innerHTML="";
+      }
+    } else {
+      vdPct.textContent="-"; vdEnd.textContent="-"; vdVerdict.className="vd-verdict"; vdVerdict.innerHTML="";
+    }
+  }
+
+  // helper: format a number without trailing zeros
+  function fmtNum(n){
+    if(!isFinite(n)) return n.toString();
+    const r = Math.round(n*1000)/1000;
+    return (Number.isInteger(r) ? r.toString() : r.toString());
+  }
+
+  [vdLength,vdVolts,vdLoadMin].forEach(el=>el.addEventListener('input',calcVoltDrop));
+  vdLoadMax.addEventListener('input', ()=>{ loadMaxEdited = vdLoadMax.value.trim()!==""; calcVoltDrop(); });
+  document.querySelectorAll('#pathSeg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#pathSeg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); vdPath=b.dataset.path; calcVoltDrop();
+  }));
+  document.querySelectorAll('#lenUnitToggle button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#lenUnitToggle button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); lenUnit=b.dataset.u; $('lenUnitLabel').textContent=lenUnit; calcVoltDrop();
+  }));
+
+  // ---- splice / CSA ----
+  const mtCSA=$('mtCSA'), mtEquiv=$('mtEquiv'), mtNote=$('mtNote'), spGrid=$('spGrid'), spAdd=$('spAdd');
+  const MT_GAUGES = ["32","30","28","26","24","22","20","18","16","14","12","10","8","6","4"];
+  const SP_MAX = 6;
+  function rowOf(awg){ return DATA.find(d=>d.awg===awg); }
+
+  // per-spec AWG range and copper CSA for the splice/multiterm tab
+  function specRange(spec){
+    if(spec==="55a") return ["30","28","26","24","22","20","18","16","14","12","10","8"];
+    if(spec==="55m") return ["30","28","26","24"];
+    return MT_GAUGES; // generic: full 32-4
+  }
+  function csaAreaFor(spec, awg){
+    // multi-wire/splice tab: physical bundle area (what fits in the barrel)
+    if(spec==="55a" && SPEC55A_BUNDLE_CSA[awg]!=null) return SPEC55A_BUNDLE_CSA[awg];
+    if(spec==="55m" && SPEC55M_BUNDLE_CSA[awg]!=null) return SPEC55M_BUNDLE_CSA[awg];
+    return rowOf(awg).area; // generic uses PowerStream's listed CSA
+  }
+
+  // stable full even-AWG set for resolving the equivalent splice size (independent of main-tab spec)
+  const CSA_GAUGES = DATA.filter(d => GENERIC_RANGE.includes(d.awg));
+  function equivalentAWG(target){
+    // round up to the nearest even AWG across the full 4-32 set
+    const asc=[...CSA_GAUGES].sort((a,b)=>a.area-b.area);
+    for(const d of asc){ if(d.area>=target-1e-9) return d; }
+    return null;
+  }
+  function nearestAWG(target){
+    // absolute closest even AWG by cross-sectional area (may be smaller or larger)
+    let best=null, bestDiff=Infinity;
+    for(const d of CSA_GAUGES){
+      const diff=Math.abs(d.area-target);
+      if(diff<bestDiff){ bestDiff=diff; best=d; }
+    }
+    return best;
+  }
+  function trim(n){ return n.toFixed(3).replace(/0+$/,'').replace(/\.$/,''); }
+
+  function renumberSpecs(){
+    const cols = [...spGrid.querySelectorAll('.sp-col')];
+    cols.forEach((col,i)=>{
+      col.querySelector('.sp-head').textContent = "Wire Spec "+(i+1);
+      // only allow removal when more than the minimum of two specs exist
+      col.querySelector('.sp-remove').style.visibility = cols.length > 2 ? 'visible' : 'hidden';
+    });
+  }
+
+  function buildDdOpts(spec){
+    return `<div class="dd-opt" data-value="">-</div>`+
+      specRange(spec).map(g=>`<div class="dd-opt" data-value="${g}">${g} AWG</div>`).join('');
+  }
+
+  function addSpec(defaultGauge){
+    const count = spGrid.querySelectorAll('.sp-col').length;
+    if(count >= SP_MAX) return;
+    const colSpec = wireSpec; // inherit the main tab's current spec as this column's default
+    const col=document.createElement('div');
+    col.className='sp-col';
+    col.dataset.spec = colSpec;
+    col.innerHTML =
+      `<div class="sp-head"></div>`+
+      `<div class="sp-spectoggle">`+
+        `<button type="button" data-spec="55m">55M</button>`+
+        `<button type="button" data-spec="55a">55A</button>`+
+        `<button type="button" data-spec="generic">Gen</button>`+
+      `</div>`+
+      `<div class="dd" data-value="">`+
+        `<button type="button" class="dd-toggle"><span class="dd-label">-</span><span class="dd-chev">▾</span></button>`+
+        `<div class="dd-menu">${buildDdOpts(colSpec)}</div>`+
+      `</div>`+
+      `<div class="sp-csa" data-empty="1">-</div>`+
+      `<input type="number" min="1" max="99" step="1" value="1" inputmode="numeric">`+
+      `<div class="sp-mult-label">× qty</div>`+
+      `<button class="sp-remove" title="Remove">remove</button>`;
+    spGrid.appendChild(col);
+    const dd = col.querySelector('.dd');
+    setColSpecActive(col, colSpec);
+    if(defaultGauge && specRange(colSpec).includes(defaultGauge)) setDropdown(dd, defaultGauge);
+    initDropdown(dd);
+    // per-column spec pill handlers
+    col.querySelectorAll('.sp-spectoggle button').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        const newSpec = btn.dataset.spec;
+        col.dataset.spec = newSpec;
+        setColSpecActive(col, newSpec);
+        // rebuild this column's gauge menu for the new spec, snapping the current gauge if needed
+        const cur = dd.dataset.value;
+        const range = specRange(newSpec);
+        dd.querySelector('.dd-menu').innerHTML = buildDdOpts(newSpec);
+        initDropdownOpts(dd);
+        if(cur && range.includes(cur)) setDropdown(dd, cur);
+        else if(cur){
+          // snap to nearest valid gauge by numeric AWG
+          const target=parseInt(cur,10);
+          let best=range[0], bd=Infinity;
+          range.forEach(g=>{ const df=Math.abs(parseInt(g,10)-target); if(df<bd){bd=df;best=g;} });
+          setDropdown(dd, best);
+        } else setDropdown(dd, "");
+        calcSplice();
+      });
+    });
+    col.querySelector('input').addEventListener('input', calcSplice);
+    col.querySelector('.sp-remove').addEventListener('click', ()=>{
+      if(spGrid.querySelectorAll('.sp-col').length <= 2) return;
+      col.remove();
+      renumberSpecs();
+      updateAddBtn();
+      calcSplice();
+    });
+    renumberSpecs();
+    updateAddBtn();
+  }
+
+  function setColSpecActive(col, spec){
+    col.querySelectorAll('.sp-spectoggle button').forEach(b=>b.classList.toggle('active', b.dataset.spec===spec));
+  }
+
+  // custom dropdown helpers
+  function setDropdown(dd, value){
+    dd.dataset.value = value;
+    const opt = [...dd.querySelectorAll('.dd-opt')].find(o=>o.dataset.value===value);
+    dd.querySelector('.dd-label').textContent = opt ? opt.textContent : "-";
+    dd.querySelectorAll('.dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.value===value));
+  }
+  function initDropdown(dd){
+    const toggle = dd.querySelector('.dd-toggle');
+    toggle.addEventListener('click', e=>{
+      e.stopPropagation();
+      const wasOpen = dd.classList.contains('open');
+      document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
+      if(!wasOpen) dd.classList.add('open');
+    });
+    initDropdownOpts(dd);
+  }
+  function initDropdownOpts(dd){
+    dd.querySelectorAll('.dd-opt').forEach(opt=>{
+      opt.addEventListener('click', e=>{
+        e.stopPropagation();
+        setDropdown(dd, opt.dataset.value);
+        dd.classList.remove('open');
+        calcSplice();
+      });
+    });
+  }
+
+  function updateAddBtn(){
+    const count = spGrid.querySelectorAll('.sp-col').length;
+    spAdd.disabled = count >= SP_MAX;
+    spAdd.textContent = count >= SP_MAX ? "Maximum 6 specs" : "+ Add wire spec";
+  }
+
+  function calcSplice(){
+    let total=0;
+    const parts=[];
+    let wireCount=0;
+    [...spGrid.querySelectorAll('.sp-col')].forEach(col=>{
+      const g=col.querySelector('.dd').dataset.value;
+      const csaEl=col.querySelector('.sp-csa');
+      if(!g){ col.classList.add('off'); if(csaEl){ csaEl.textContent="-"; csaEl.dataset.empty="1"; } return; }
+      col.classList.remove('off');
+      let qty=parseInt(col.querySelector('input').value,10);
+      if(isNaN(qty)||qty<1){ qty=1; }
+      const spec=col.dataset.spec||"generic";
+      const area=csaAreaFor(spec, g);
+      if(csaEl){ csaEl.textContent="("+trim(area)+" mm²)"; csaEl.dataset.empty="0"; }
+      total += area*qty;
+      wireCount += qty;
+      const specTag = spec==="generic" ? "" : " "+(spec==="55a"?"55A":"55M");
+      parts.push(`${qty}×${g}${specTag}`);
+    });
+
+    if(total<=0){
+      mtCSA.textContent="-"; mtEquiv.textContent="-"; $('mtRound').textContent="-";
+      $('mtRoundBlock').classList.remove('feature');
+      $('mtNearBlock').classList.add('feature');
+      mtNote.textContent="Pick a gauge and quantity in at least one spec to size the splice.";
+      return;
+    }
+
+    mtCSA.textContent=trim(total);
+    const eq=equivalentAWG(total);
+    const near=nearestAWG(total);
+    const roundBlock=$('mtRoundBlock'), nearBlock=$('mtNearBlock');
+    if(eq){
+      mtEquiv.innerHTML=near.awg+' <span class="small-awg">AWG</span><span class="equiv-csa">('+near.area+' mm²)</span>';
+      // nearest is insufficient if its area is smaller than the total copper required
+      const insufficient = near.area < total - 1e-9 && near.awg!==eq.awg;
+      if(insufficient){
+        // nearest too small - show the rounded-up box as the safe (feature) choice
+        mtRound.innerHTML=eq.awg+' <span class="small-awg">AWG</span><span class="equiv-csa">('+eq.area+' mm²)</span>';
+        nearBlock.classList.remove('feature');
+        roundBlock.classList.add('feature');
+        mtNote.innerHTML=`Combined copper of ${parts.join(" + ")} is ${trim(total)} mm². The nearest AWG is ${near.awg} (${near.area} mm²) but that is smaller than the total, so round up to ${eq.awg} AWG (${eq.area} mm²) to carry it. If in doubt, confirm with a test piece.`;
+      } else {
+        // nearest already meets or exceeds the total - rounded-up box inactive
+        mtRound.textContent="-";
+        roundBlock.classList.remove('feature');
+        nearBlock.classList.add('feature');
+        mtNote.innerHTML=`Combined copper of ${parts.join(" + ")} is ${trim(total)} mm². The nearest AWG equivalent is ${near.awg} (${near.area} mm²). If in doubt, confirm with a test piece.`;
+      }
+    } else {
+      mtRound.textContent="-";
+      roundBlock.classList.remove('feature');
+      nearBlock.classList.add('feature');
+      mtEquiv.textContent="-";
+      mtNote.innerHTML=`Combined copper of ${parts.join(" + ")} is ${trim(total)} mm², which exceeds 4 AWG (the heaviest gauge here). Use a heavier conductor, busbar, or multiple splices.`;
+    }
+  }
+
+  // start with two specs
+  addSpec("24");
+  addSpec("24");
+  spAdd.addEventListener('click', ()=>addSpec());
+  calcSplice();
+
+  // ---- tabs ----
+  document.querySelectorAll('#tabs .tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      $('panel-'+tab.dataset.tab).classList.add('active');
+      // the shared wire block + warning are gauge/current-based: show on capacity & volt drop, hide on CSA
+      const onCsa = tab.dataset.tab==='csa';
+      $('wireBlock').style.display = onCsa ? 'none' : '';
+    });
+  });
+
+  // tooltip: tap to toggle on touch devices (hover handles desktop)
+  document.querySelectorAll('.tip').forEach(tip=>{
+    tip.addEventListener('click', e=>{
+      e.stopPropagation();
+      tip.classList.toggle('open');
+    });
+  });
+  document.addEventListener('click', ()=>{
+    document.querySelectorAll('.tip.open').forEach(t=>t.classList.remove('open'));
+    document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
+  });
+
+  // disclaimer gate - dismiss on acknowledge (once per session)
+  $('gateBtn').addEventListener('click', ()=>{ $('gate').classList.add('hidden'); });
+
+  refreshBundleLabels();
+  render();
+  calcVoltDrop();
+
+</script>
+</body>
+</html>
