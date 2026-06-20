@@ -1494,7 +1494,7 @@
     cols.forEach((col,i)=>{
       col.querySelector('.sp-head').textContent = "Wire Spec "+(i+1);
       // only allow removal when more than the minimum of two specs exist
-      col.querySelector('.sp-remove').style.visibility = cols.length > 2 ? 'visible' : 'hidden';
+      col.querySelector('.sp-remove').style.visibility = cols.length > 1 ? 'visible' : 'hidden';
     });
   }
 
@@ -1555,7 +1555,7 @@
     });
     col.querySelector('input').addEventListener('input', calcSplice);
     col.querySelector('.sp-remove').addEventListener('click', ()=>{
-      if(spGrid.querySelectorAll('.sp-col').length <= 2) return;
+      if(spGrid.querySelectorAll('.sp-col').length <= 1) return;
       col.remove();
       renumberSpecs();
       updateAddBtn();
@@ -1661,8 +1661,7 @@
     }
   }
 
-  // start with two specs
-  addSpec("24");
+  // start with one spec
   addSpec("24");
   spAdd.addEventListener('click', ()=>addSpec());
   calcSplice();
