@@ -802,8 +802,12 @@
         <div class="result-note" id="resultNote">24 AWG · free air</div>
       </div>
       <div class="wb-current">
-        <span class="field-label">Load current</span>
-        <div class="vd-inputwrap"><input type="number" id="currentInput" class="current-input" inputmode="decimal" min="0" step="0.1" placeholder="amps"><span class="vd-unit">A</span></div>
+        <span class="field-label">Load current
+          <span class="unit-toggle" id="curUnitToggle">
+            <button data-u="A" class="active">A</button><button data-u="mA">mA</button>
+          </span>
+        </span>
+        <div class="vd-inputwrap"><input type="number" id="currentInput" class="current-input" inputmode="decimal" min="0" step="0.1" placeholder="amps"><span class="vd-unit" id="curUnitLabel">A</span></div>
       </div>
     </div>
     <div class="cap-warn" id="warnText"></div>
@@ -895,7 +899,7 @@
       <div class="vd-field">
         <label>Cable run
           <span class="unit-toggle" id="lenUnitToggle">
-            <button data-u="m" class="active">m</button><button data-u="ft">ft</button>
+            <button data-u="mm">mm</button><button data-u="m" class="active">m</button><button data-u="ft">ft</button>
           </span>
         </label>
         <div class="vd-inputwrap"><input type="number" id="vdLength" inputmode="decimal" min="0" step="0.1" placeholder="length"><span class="vd-unit" id="lenUnitLabel">m</span></div>
@@ -1279,7 +1283,7 @@
     warn.classList.remove('show');
 
     if(raw===""){ return; }
-    const load = parseFloat(raw);
+    const load = loadAmps();
     if(isNaN(load)||load<0){ return; }
 
     // usable already includes the continuous derate, so compare the raw load directly
@@ -1360,7 +1364,13 @@
   $('contToggle').addEventListener('change',e=>{ continuous=e.target.checked; render(); });
 
   // ---- voltage drop ----
-  let vdPath="round", lenUnit="m";
+  let vdPath="round", lenUnit="m", curUnit="A";
+  // load current always in amps regardless of the A/mA display unit
+  function loadAmps(){
+    const v = parseFloat(currentInput.value);
+    if(isNaN(v)) return NaN;
+    return curUnit==="mA" ? v/1000 : v;
+  }
   const vdLength=$('vdLength'), vdVolts=$('vdVolts');
   const vdLoadMin=$('vdLoadMin'), vdLoadMax=$('vdLoadMax'), vdWorking=$('vdWorking');
   const vdResult=$('vdResult'), vdDrop=$('vdDrop'), vdPct=$('vdPct'), vdEnd=$('vdEnd'), vdVerdict=$('vdVerdict');
@@ -1369,7 +1379,7 @@
 
   function calcVoltDrop(){
     const d = GAUGES[+slider.value];
-    const I = parseFloat(currentInput.value);
+    const I = loadAmps();
     const L = parseFloat(vdLength.value);
     const V = parseFloat(vdVolts.value);
 
@@ -1389,7 +1399,7 @@
       return;
     }
 
-    const lenM = lenUnit==="ft" ? L/FT_PER_M : L;
+    const lenM = lenUnit==="ft" ? L/FT_PER_M : (lenUnit==="mm" ? L/1000 : L);
     const conductorLen = vdPath==="round" ? 2*lenM : lenM;
     const drop = I * RmEff * conductorLen;
 
@@ -1404,6 +1414,7 @@
     if(par) resParts.push(`÷ ${parallelCount} parallel = ${mRmEff.toFixed(2)} mΩ/m`);
     const lenParts = [];
     if(lenUnit==="ft") lenParts.push(`${fmtNum(L)} ft = ${fmtNum(lenM)} m`);
+    if(lenUnit==="mm") lenParts.push(`${fmtNum(L)} mm = ${fmtNum(lenM)} m`);
     if(vdPath==="round") lenParts.push("doubled length for round trip");
     vdWorking.innerHTML =
       `<b>${fmtNum(I)} A</b> × <b>${resShown}</b> × <b>${pathNote}</b> = <b>${drop.toFixed(drop<1?3:2)} V</b>`+
@@ -1450,8 +1461,38 @@
     b.classList.add('active'); vdPath=b.dataset.path; calcVoltDrop();
   }));
   document.querySelectorAll('#lenUnitToggle button').forEach(b=>b.addEventListener('click',()=>{
+    const newU = b.dataset.u;
+    if(newU===lenUnit) return;
+    // convert the entered value so the physical length stays the same
+    const v = parseFloat(vdLength.value);
+    if(!isNaN(v)){
+      // current value -> metres
+      const m = lenUnit==="ft" ? v/FT_PER_M : (lenUnit==="mm" ? v/1000 : v);
+      // metres -> new unit
+      const shown = newU==="ft" ? m*FT_PER_M : (newU==="mm" ? m*1000 : m);
+      // round per unit: mm to 1dp, ft to 3dp, m to 3dp - enough to kill float noise, keep precision
+      const dp = newU==="mm" ? 1 : 3;
+      vdLength.value = +shown.toFixed(dp);
+    }
     document.querySelectorAll('#lenUnitToggle button').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active'); lenUnit=b.dataset.u; $('lenUnitLabel').textContent=lenUnit; calcVoltDrop();
+    b.classList.add('active'); lenUnit=newU; $('lenUnitLabel').textContent=lenUnit; calcVoltDrop();
+  }));
+  document.querySelectorAll('#curUnitToggle button').forEach(b=>b.addEventListener('click',()=>{
+    const newU = b.dataset.u;
+    if(newU===curUnit) return;
+    // convert the entered value so the physical current stays the same
+    const v = parseFloat(currentInput.value);
+    if(!isNaN(v)){
+      const amps = curUnit==="mA" ? v/1000 : v;        // current value in amps
+      const shown = newU==="mA" ? amps*1000 : amps;     // value in the new unit
+      // mA to 1dp, A to 4dp - kills float noise, keeps small-current precision
+      currentInput.value = +shown.toFixed(newU==="mA" ? 1 : 4);
+    }
+    document.querySelectorAll('#curUnitToggle button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); curUnit=newU;
+    $('curUnitLabel').textContent=curUnit;
+    currentInput.placeholder = curUnit==="mA" ? "milliamps" : "amps";
+    evaluateLoad(); calcVoltDrop();
   }));
 
   // ---- splice / CSA ----
