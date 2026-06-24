@@ -1461,6 +1461,14 @@
     if(vdPath==="round") lenParts.push("Length doubled for round trip");
     // plain-text calculation (no HTML) for the clipboard
     const calcPlain = `${fmtNum(I)} A × ${resShown} × ${pathNote} = ${drop.toFixed(drop<1?3:2)} V`;
+    // wire gauge summary line for the clipboard
+    const specNameMap = { "55a":"TE 55A", "55m":"TE 55M", "generic":"Generic" };
+    const specName = specNameMap[wireSpec] || "Generic";
+    const ohmPerM = (mRmEff/1000).toFixed(5).replace(/0+$/,'').replace(/\.$/,'');
+    const bandLabel = BUNDLE[standard].labels[bundleIdx];
+    const bundleDesc = bundleIdx===0 ? "free air (1-3)" : `${bandLabel} bundled (${standard.toUpperCase()})`;
+    const parDesc = parallelCount>1 ? `${parallelCount} parallel` : "single";
+    const gaugeLine = `${specName} ${d.awg} AWG · ${parDesc} · ${bundleDesc} · ${ohmPerM} Ω/m`;
     vdWorking.innerHTML =
       `<div class="vw-line"><div class="vw-calc"><b>${fmtNum(I)} A</b> × <b>${resShown}</b> × <b>${pathNote}</b> = <b>${drop.toFixed(drop<1?3:2)} V</b>`+
       `<span class="vw-sub">${resParts.join(" · ")}</span>`+
@@ -1474,8 +1482,13 @@
       vdPct.textContent=pct.toFixed(1)+"%";
       vdEnd.textContent=vLoad.toFixed(drop<1?2:1)+" V";
 
-      // clipboard string: include supply-dependent lines only when a supply voltage is set
-      vdClipboard = `Volts dropped: ${calcPlain}\n% of supply: ${pct.toFixed(1)}%\nVolts at load: ${vLoad.toFixed(drop<1?2:1)} V`;
+      // clipboard string: include source voltage + supply-dependent lines when a supply voltage is set
+      vdClipboard =
+        `Wire gauge: ${gaugeLine}\n`+
+        `Volts dropped: ${calcPlain}\n`+
+        `Source voltage: ${fmtNum(V)} V\n`+
+        `Volts at load: ${vLoad.toFixed(drop<1?2:1)} V\n`+
+        `% of supply: ${pct.toFixed(1)}%`;
 
       const minRaw = vdLoadMin.value.trim();
       const loadMin = minRaw==="" ? NaN : parseFloat(minRaw);
@@ -1494,8 +1507,8 @@
       }
     } else {
       vdPct.textContent="-"; vdEnd.textContent="-"; vdVerdict.className="vd-verdict"; vdVerdict.innerHTML="";
-      // no supply voltage: clipboard is just the volts-dropped line
-      vdClipboard = `Volts dropped: ${calcPlain}`;
+      // no supply voltage: wire gauge + volts dropped only
+      vdClipboard = `Wire gauge: ${gaugeLine}\nVolts dropped: ${calcPlain}`;
     }
   }
 
